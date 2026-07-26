@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Woordenboek — трекер нидерландского</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1D4E89">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Woordenboek">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF2F6;
+    --surface:#FFFFFF;
+    --surface-2:#F6F8FA;
+    --ink:#1C1D21;
+    --ink-muted:#5B6472;
+    --ink-faint:#8A93A0;
+    --blue:#1D4E89;
+    --blue-deep:#123A66;
+    --blue-wash:#E6EEF6;
+    --ochre:#C68A1F;
+    --ochre-wash:#FBF1DD;
+    --coral:#C1502E;
+    --coral-wash:#FBEAE4;
+    --teal:#2F7D63;
+    --teal-wash:#E4F1EC;
+    --border:#DCE3EA;
+    --radius:12px;
+    --shadow: 0 1px 2px rgba(18,58,102,0.06), 0 6px 20px rgba(18,58,102,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{
+    max-width:880px;
+    margin:0 auto;
+    padding:20px 16px 64px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ---------- header ---------- */
+  .app-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:16px;
+    padding:6px 2px 20px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:20px;
+  }
+  .brand-mark{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand-tile{
+    width:38px;height:38px;flex:none;border-radius:8px;
+    background:var(--blue);
+    position:relative;
+    overflow:hidden;
+  }
+  .brand-tile::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 0 100%, transparent 8px, var(--ochre) 8px, var(--ochre) 9px, transparent 9.5px),
+      radial-gradient(circle at 100% 0, transparent 8px, var(--ochre) 8px, var(--ochre) 9px, transparent 9.5px);
+  }
+  .brand-text h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:21px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .brand-text p{
+    margin:2px 0 0;
+    font-size:12.5px;
+    color:var(--ink-muted);
+  }
+  .header-actions{display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center;}
+  .save-indicator{font-size:11px; color:var(--ink-faint); margin-right:2px; white-space:nowrap;}
+  .save-indicator.saving{color:var(--ochre);}
+  .save-indicator.error{color:var(--coral); font-weight:700;}
+
+  /* ---------- buttons ---------- */
+  button{font-family:inherit; cursor:pointer;}
+  .btn{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink);
+    font-size:13px;
+    font-weight:600;
+    padding:9px 14px;
+    border-radius:9px;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .btn:hover{border-color:var(--blue);}
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .btn-primary:hover{background:var(--blue-deep); border-color:var(--blue-deep);}
+  .btn-ghost{background:transparent; border-color:transparent; color:var(--ink-muted);}
+  .btn-ghost:hover{color:var(--coral); border-color:transparent;}
+  .btn-sm{padding:6px 10px; font-size:12px; border-radius:7px;}
+  .btn-block{width:100%;}
+  .btn[disabled]{opacity:.45; cursor:not-allowed;}
+
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex; gap:4px; margin-bottom:20px;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto;
+  }
+  .tab-btn{
+    background:none; border:none;
+    padding:10px 14px 12px;
+    font-size:13.5px; font-weight:600;
+    color:var(--ink-faint);
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  .tab-btn.active{color:var(--blue); border-bottom-color:var(--blue);}
+
+  /* ---------- cards / layout ---------- */
+  .grid-stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(130px,1fr));
+    gap:10px;
+    margin-bottom:20px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .stat-card .num{font-family:'Fraunces',serif; font-size:26px; font-weight:600; line-height:1;}
+  .stat-card .lbl{font-size:12px; color:var(--ink-muted); margin-top:6px;}
+  .stat-card.accent-due .num{color:var(--coral);}
+  .stat-card.accent-mastered .num{color:var(--teal);}
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .panel h2{
+    font-family:'Fraunces',serif;
+    font-size:16px; font-weight:600; margin:0 0 12px;
+  }
+  .panel p.hint{font-size:12.5px; color:var(--ink-muted); margin:-6px 0 14px;}
+
+  textarea, input[type=text]{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:13.5px;
+    font-family:inherit;
+    background:var(--surface-2);
+    color:var(--ink);
+  }
+  textarea{resize:vertical; min-height:90px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; line-height:1.6;}
+  textarea:focus, input:focus{outline:2px solid var(--blue); outline-offset:1px; background:#fff;}
+  label{font-size:12.5px; font-weight:600; color:var(--ink-muted); display:block; margin-bottom:5px;}
+  .field{margin-bottom:12px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  /* ---------- word list ---------- */
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center;}
+  .toolbar input[type=text]{max-width:220px;}
+  .chip{
+    border:1px solid var(--border); background:var(--surface-2);
+    border-radius:20px; padding:6px 12px; font-size:12px; font-weight:600;
+    color:var(--ink-muted);
+  }
+  .chip.active{background:var(--blue-wash); border-color:var(--blue); color:var(--blue-deep);}
+
+  .word-list{display:flex; flex-direction:column; gap:8px;}
+  .word-card{
+    display:flex; align-items:center; gap:14px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-left:4px solid var(--ink-faint);
+    border-radius:9px;
+    padding:12px 14px;
+  }
+  .word-card.status-new{border-left-color:var(--blue);}
+  .word-card.status-learning{border-left-color:var(--ochre);}
+  .word-card.status-review{border-left-color:var(--coral);}
+  .word-card.status-mastered{border-left-color:var(--teal);}
+  .word-main{flex:1; min-width:0;}
+  .word-head{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+  .word-nl{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px;}
+  .word-variant{font-size:10px; font-weight:700; padding:1px 6px; border-radius:5px; letter-spacing:.03em;}
+  .word-variant.BE{background:var(--ochre-wash); color:#8A5F0F;}
+  .word-variant.NL{background:var(--blue-wash); color:var(--blue-deep);}
+  .word-tr{color:var(--ink-muted); font-size:13px; margin-top:2px;}
+  .word-transcription{font-size:12px; color:var(--ink-faint); font-style:italic;}
+  .speak-btn{font-size:13px; line-height:1;}
+  .word-ex{color:var(--ink-faint); font-size:12px; margin-top:3px; font-style:italic;}
+  .word-meta{font-size:11px; color:var(--ink-faint); margin-top:4px;}
+  .word-actions{display:flex; gap:6px; flex:none;}
+  .icon-btn{
+    border:none; background:none; color:var(--ink-faint);
+    font-size:14px; padding:4px 6px; border-radius:6px;
+  }
+  .icon-btn:hover{background:var(--border); color:var(--ink);}
+
+  .empty-state{
+    text-align:center; padding:36px 12px; color:var(--ink-muted); font-size:13.5px;
+  }
+
+  /* ---------- category browser ---------- */
+  .category-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .category-card{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px 14px;
+    cursor:pointer;
+    transition:border-color .15s ease, transform .1s ease;
+  }
+  .category-card:hover{border-color:var(--blue); transform:translateY(-1px);}
+  .category-card-all{background:var(--blue-wash); border-color:var(--blue);}
+  .category-name{font-family:'Fraunces',serif; font-weight:600; font-size:14.5px;}
+  .category-count{font-size:12px; color:var(--ink-muted); margin-top:4px;}
+  .back-row{margin-bottom:14px;}
+  .category-heading{font-family:'Fraunces',serif; font-size:17px; font-weight:600; margin:0 0 12px;}
+
+  /* ---------- flashcards ---------- */
+  .review-stage{display:flex; flex-direction:column; align-items:center; gap:18px; padding:10px 0 4px;}
+  .flip-card{
+    width:100%; max-width:420px; height:220px;
+    perspective:1200px;
+  }
+  .flip-inner{
+    position:relative; width:100%; height:100%;
+    transform-style:preserve-3d;
+    transition:transform .45s cubic-bezier(.4,.2,.2,1);
+  }
+  .flip-card.flipped .flip-inner{transform:rotateY(180deg);}
+  .flip-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    box-shadow:var(--shadow);
+  }
+  .flip-face.back{transform:rotateY(180deg); background:var(--blue-wash);}
+  .flip-front-word{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:26px;}
+  .flip-front-hint{margin-top:10px; font-size:12px; color:var(--ink-faint);}
+  .flip-back-word{font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--blue-deep);}
+  .flip-back-ex{margin-top:10px; font-size:13px; color:var(--ink-muted); font-style:italic;}
+  .review-progress{font-size:12px; color:var(--ink-muted);}
+  .review-actions{display:flex; gap:10px;}
+  .btn-know{background:var(--teal); color:#fff; border-color:var(--teal);}
+  .btn-know:hover{background:#245F4C; border-color:#245F4C;}
+  .btn-forgot{background:var(--coral); color:#fff; border-color:var(--coral);}
+  .btn-forgot:hover{background:#A2401F; border-color:#A2401F;}
+
+  /* ---------- writing practice ---------- */
+  .write-card{
+    width:100%; max-width:420px; margin:0 auto;
+    border:1px solid var(--border); border-radius:14px; background:var(--surface);
+    box-shadow:var(--shadow); padding:28px 24px; text-align:center;
+  }
+  .write-prompt-label{font-size:12px; color:var(--ink-faint); margin-bottom:8px;}
+  .write-prompt-word{font-family:'Fraunces',serif; font-size:24px; font-weight:600; color:var(--blue-deep);}
+  .write-input{
+    width:100%; max-width:420px; margin:16px auto 0; display:block;
+    text-align:center; font-family:'IBM Plex Mono',monospace; font-size:17px;
+    padding:12px 14px; border:1.5px solid var(--border); border-radius:10px; background:var(--surface-2);
+  }
+  .write-input:focus{outline:2px solid var(--blue); outline-offset:1px; background:#fff;}
+  .write-input:disabled{opacity:.8;}
+  .write-feedback{
+    max-width:420px; margin:16px auto 0; padding:10px 14px; border-radius:9px;
+    font-weight:700; font-size:14.5px;
+  }
+  .write-feedback.correct{background:var(--teal-wash); color:#1F5A47;}
+  .write-feedback.incorrect{background:var(--coral-wash); color:#8C3A20;}
+
+  /* ---------- grammar ---------- */
+  .level-block{margin-bottom:18px;}
+  .level-head{display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .level-tag{
+    font-family:'Fraunces',serif; font-weight:600; font-size:13px;
+    background:var(--blue); color:#fff; padding:2px 9px; border-radius:6px;
+  }
+  .level-bar{flex:1; height:6px; background:var(--border); border-radius:4px; overflow:hidden;}
+  .level-bar-fill{height:100%; background:var(--teal);}
+  .level-pct{font-size:11.5px; color:var(--ink-muted); flex:none;}
+  .topic-row{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 4px; border-bottom:1px solid var(--surface-2);
+    font-size:13px;
+  }
+  .topic-row:last-child{border-bottom:none;}
+  .topic-status-btn{
+    flex:none; width:22px; height:22px; border-radius:6px;
+    border:1.5px solid var(--border); background:var(--surface);
+    font-size:12px; display:flex; align-items:center; justify-content:center;
+  }
+  .topic-status-btn.done{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .topic-status-btn.in_progress{background:var(--ochre); border-color:var(--ochre); color:#fff;}
+  .topic-text{flex:1;}
+  .topic-text.done{color:var(--ink-faint); text-decoration:line-through;}
+
+  /* ---------- rules ---------- */
+  .rule-card{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-left:4px solid var(--blue);
+    border-radius:9px;
+    padding:12px 14px;
+    margin-bottom:8px;
+  }
+  .rule-head{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .rule-title{font-family:'Fraunces',serif; font-weight:600; font-size:14.5px;}
+  .rule-level{font-size:10px; font-weight:700; padding:1px 7px; border-radius:5px; background:var(--blue-wash); color:var(--blue-deep); letter-spacing:.03em; flex:none;}
+  .rule-text{font-size:13px; color:var(--ink-muted); margin-top:6px; line-height:1.5;}
+  .rule-example{font-size:12px; color:var(--ink-faint); margin-top:6px; font-style:italic;}
+
+  /* ---------- export ---------- */
+  .export-box{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:9px;
+    padding:10px; margin-top:10px;
+  }
+  .export-box textarea{background:#fff; min-height:160px;}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(12px);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:8px;
+    font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    z-index:50; max-width:90vw; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  footer.note{
+    text-align:center; color:var(--ink-faint); font-size:11.5px; margin-top:26px; line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="app-header">
+    <div class="brand-mark">
+      <div class="brand-tile"></div>
+      <div class="brand-text">
+        <h1>Woordenboek</h1>
+        <p>Мой словарь и грамматика нидерландского</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="saveIndicator" class="save-indicator saved">Сохранено</span>
+      <button class="btn" onclick="openExport()">Экспорт для Claude</button>
+      <button class="btn" onclick="openJsonBackup()">JSON-бэкап</button>
+      <button class="btn" onclick="openImportBackup()">Импорт бэкапа</button>
+      <button class="btn btn-ghost" onclick="confirmReset()">Сбросить всё</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"></div>
+
+  <footer class="note">Данные хранятся локально в этом артефакте и никуда не отправляются.<br>Открывай именно этот трекер каждый раз — если создать новую копию артефакта с нуля, она стартует с пустым хранилищем.</footer>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ===================== DATA ===================== */
+const GRAMMAR_TOPICS = [
+  {id:'a1_de_het', level:'A1', text:'Артикли de / het и логика их выбора'},
+  {id:'a1_pron', level:'A1', text:'Личные местоимения (ik, jij/je, hij, zij/ze, wij/we...)'},
+  {id:'a1_present', level:'A1', text:'Настоящее время: спряжение правильных глаголов'},
+  {id:'a1_irregular', level:'A1', text:'Ключевые неправильные глаголы: zijn, hebben, gaan, doen'},
+  {id:'a1_v2', level:'A1', text:'Порядок слов: правило V2 (глагол на 2-м месте)'},
+  {id:'a1_questions', level:'A1', text:'Вопросительные предложения (да/нет и с вопросительным словом)'},
+  {id:'a1_negation', level:'A1', text:'Отрицание: niet vs geen'},
+  {id:'a1_plural', level:'A1', text:'Множественное число существительных (-en / -s)'},
+  {id:'a1_possessive', level:'A1', text:'Притяжательные местоимения (mijn, jouw, zijn, haar...)'},
+  {id:'a1_numbers', level:'A1', text:'Числительные, время, дни недели, даты'},
+  {id:'a1_modal', level:'A1', text:'Модальные глаголы: kunnen, willen, moeten, mogen'},
+  {id:'a1_prepositions', level:'A1', text:'Простые предлоги места (in, op, onder, naast...)'},
+  {id:'a1_te', level:'A1', text:'Инфинитив с te (proberen te, beginnen te)'},
+
+  {id:'a2_perfectum', level:'A2', text:'Перфект: hebben/zijn + причастие прошедшего времени'},
+  {id:'a2_participle', level:'A2', text:'Образование причастий (ge-...-t/d и неправильные формы)'},
+  {id:'a2_imperfectum', level:'A2', text:'Претерит (imperfectum) правильных и частых неправильных глаголов'},
+  {id:'a2_separable', level:'A2', text:'Разделяемые и неразделяемые приставочные глаголы'},
+  {id:'a2_subclause', level:'A2', text:'Порядок слов в придаточных (omdat, dat, als — глагол в конец)'},
+  {id:'a2_comparative', level:'A2', text:'Сравнительная и превосходная степень прилагательных'},
+  {id:'a2_demonstrative', level:'A2', text:'Указательные местоимения (deze/dit, die/dat)'},
+  {id:'a2_er', level:'A2', text:'Местоименные наречия с er- (erover, ermee, waarmee)'},
+  {id:'a2_diminutive', level:'A2', text:'Уменьшительные суффиксы (-je, -tje, -pje) в разговорной речи'},
+  {id:'a2_imperative', level:'A2', text:'Императив (побудительные предложения)'},
+
+  {id:'b1_future', level:'B1', text:'Будущее время (gaan / zullen)'},
+  {id:'b1_conditional', level:'B1', text:'Условные предложения с zou / zouden'},
+  {id:'b1_passive', level:'B1', text:'Пассивный залог (worden / zijn + причастие)'},
+  {id:'b1_conjunctions', level:'B1', text:'Сложные союзы (hoewel, terwijl, zodat...)'},
+  {id:'b1_om_te', level:'B1', text:'Оборот om te + инфинитив'},
+  {id:'b1_endgroup', level:'B1', text:'Несколько глаголов в конце предложения (werkwoordelijke eindgroep)'},
+  {id:'b1_particles', level:'B1', text:'Разговорные частицы: toch, eigenlijk, gewoon, hoor, hè'},
+  {id:'b1_idioms', level:'B1', text:'Устойчивые фразовые глаголы и бытовые идиомы'},
+  {id:'b1_flemish', level:'B1', text:'Особенности произношения и лексики фламандского варианта'},
+];
+
+let state = {
+  vocab: [],
+  grammar: {},
+  rules: [],
+  writeStats: {correct:0, incorrect:0},
+  write: null,
+  tab: 'dashboard',
+  filterStatus: 'all',
+  filterText: '',
+  selectedCategory: null,
+  rulesFilterLevel: 'all',
+  review: {queue: [], flipped: false, masteredCount: 0, totalStarted: 0},
+  loading: true
+};
+
+/* ===================== STORAGE ===================== */
+// Standalone PWA build: uses the browser's own localStorage instead of the
+// Claude-artifact-only window.storage API, so this works outside Claude entirely.
+const LS_PREFIX = 'woordenboek:';
+const storage = {
+  async get(key){
+    const raw = localStorage.getItem(LS_PREFIX + key);
+    if(raw === null) throw new Error('not found');
+    return {key, value: raw, shared:false};
+  },
+  async set(key, value){
+    localStorage.setItem(LS_PREFIX + key, value);
+    return {key, value, shared:false};
+  }
+};
+async function loadAll(){
+  try{
+    const v = await storage.get('vocab');
+    state.vocab = v && v.value ? JSON.parse(v.value) : [];
+  }catch(e){ state.vocab = []; }
+  try{
+    const g = await storage.get('grammar');
+    state.grammar = g && g.value ? JSON.parse(g.value) : {};
+  }catch(e){ state.grammar = {}; }
+  try{
+    const r = await storage.get('rules');
+    state.rules = r && r.value ? JSON.parse(r.value) : [];
+  }catch(e){ state.rules = []; }
+  try{
+    const ws = await storage.get('writestats');
+    state.writeStats = ws && ws.value ? JSON.parse(ws.value) : {correct:0, incorrect:0};
+  }catch(e){ state.writeStats = {correct:0, incorrect:0}; }
+  state.loading = false;
+}
+// Saves are debounced and queued: rapid actions are batched into one write,
+// with a visible status indicator and forced flushes at natural checkpoints.
+const SAVE_DEBOUNCE_MS = 700;
+const pendingTimers = {vocab:null, grammar:null, rules:null, writestats:null};
+const saveChains = {vocab:Promise.resolve(), grammar:Promise.resolve(), rules:Promise.resolve(), writestats:Promise.resolve()};
+const dataGetters = {vocab:()=>state.vocab, grammar:()=>state.grammar, rules:()=>state.rules, writestats:()=>state.writeStats};
+const saveErrorMsg = {vocab:'словарь', grammar:'грамматику', rules:'правила', writestats:'статистику письма'};
+
+function setSaveIndicator(status){
+  const el = document.getElementById('saveIndicator');
+  if(!el) return;
+  el.className = 'save-indicator ' + status;
+  el.textContent = status==='saving' ? 'Сохраняю…' : status==='error' ? 'Ошибка сохранения — попробуй ещё раз' : 'Сохранено';
+}
+
+function flushOne(name){
+  if(pendingTimers[name]){ clearTimeout(pendingTimers[name]); pendingTimers[name] = null; }
+  const snapshot = JSON.stringify(dataGetters[name]());
+  setSaveIndicator('saving');
+  saveChains[name] = saveChains[name].then(async () => {
+    try{ await storage.set(name, snapshot); setSaveIndicator('saved'); }
+    catch(e){
+      setSaveIndicator('error');
+      toast('Не удалось сохранить ' + saveErrorMsg[name] + '. Попробуй ещё раз.');
+    }
+  });
+  return saveChains[name];
+}
+
+function scheduleSave(name){
+  if(pendingTimers[name]) clearTimeout(pendingTimers[name]);
+  pendingTimers[name] = setTimeout(() => flushOne(name), SAVE_DEBOUNCE_MS);
+}
+
+function flushSaves(){
+  flushOne('vocab'); flushOne('grammar'); flushOne('rules'); flushOne('writestats');
+}
+
+function saveVocab(){ scheduleSave('vocab'); }
+function saveGrammar(){ scheduleSave('grammar'); }
+function saveRules(){ scheduleSave('rules'); }
+function saveWriteStats(){ scheduleSave('writestats'); }
+
+window.addEventListener('beforeunload', flushSaves);
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'hidden') flushSaves();
+});
+
+/* ===================== BACKUP IMPORT (migration from the Claude artifact) ===================== */
+function importJsonBackup(raw){
+  let data;
+  try{ data = JSON.parse(raw); }
+  catch(e){ toast('Не получилось прочитать JSON — проверь, что вставлен текст целиком.'); return; }
+  if(!data || typeof data !== 'object'){ toast('Файл выглядит не как бэкап трекера.'); return; }
+  let importedVocab=0, importedRules=0;
+  if(Array.isArray(data.vocab)){
+    data.vocab.forEach(w=>{
+      if(!w || !w.dutch) return;
+      const exists = state.vocab.some(x=>x.dutch.toLowerCase()===w.dutch.toLowerCase());
+      if(!exists){ state.vocab.push(w); importedVocab++; }
+    });
+  }
+  if(data.grammar && typeof data.grammar === 'object'){
+    state.grammar = Object.assign({}, state.grammar, data.grammar);
+  }
+  if(Array.isArray(data.rules)){
+    data.rules.forEach(r=>{
+      if(!r || !r.title) return;
+      const exists = state.rules.some(x=>x.title.toLowerCase()===r.title.toLowerCase());
+      if(!exists){ state.rules.push(r); importedRules++; }
+    });
+  }
+  if(data.writeStats && typeof data.writeStats === 'object'){
+    state.writeStats.correct += (data.writeStats.correct||0);
+    state.writeStats.incorrect += (data.writeStats.incorrect||0);
+  }
+  saveVocab(); saveGrammar(); saveRules(); saveWriteStats();
+  flushSaves();
+  toast(`Импортировано: слов — ${importedVocab}, правил — ${importedRules}. Грамматика обновлена.`);
+  render();
+}
+
+/* ===================== HELPERS ===================== */
+function uid(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function addDays(iso, days){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); }
+const BOX_INTERVAL = {1:0, 2:2, 3:5, 4:10, 5:21};
+function statusOf(w){
+  if(w.box<=1) return 'new';
+  if(w.box<=3) return 'learning';
+  if(w.box===4) return 'review';
+  return 'mastered';
+}
+const STATUS_LABEL = {new:'Новое', learning:'Учу', review:'Повторяю', mastered:'Выучено'};
+function isDue(w){ return w.nextReview <= todayISO(); }
+function categoryKeyOf(cat){
+  return ((cat||'Общее').trim().toLowerCase()) || 'общее';
+}
+function categoryLabelOf(cat){
+  const c = (cat||'Общее').trim() || 'Общее';
+  return c.charAt(0).toUpperCase() + c.slice(1);
+}
+function pluralWordsSuffix(n){
+  const mod100 = Math.abs(n) % 100;
+  const mod10 = mod100 % 10;
+  if(mod100 > 10 && mod100 < 20) return '';
+  if(mod10 === 1) return 'о';
+  if(mod10 >= 2 && mod10 <= 4) return 'а';
+  return '';
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ===================== BULK ADD PARSING ===================== */
+// Expected line format: dutch | translation | example | category | transcription
+// The 5th field (transcription) is optional. Falls back to tab-separated or " - " separated.
+function parseBulkLines(raw){
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const parsed = [];
+  for(const line of lines){
+    let parts;
+    if(line.includes('|')) parts = line.split('|');
+    else if(line.includes('\t')) parts = line.split('\t');
+    else if(line.includes(' — ')) parts = line.split(' — ');
+    else parts = line.split(' - ');
+    parts = parts.map(p=>p.trim());
+    if(!parts[0]) continue;
+    let variant = '';
+    let dutch = parts[0];
+    const variantMatch = dutch.match(/^\((NL|BE)\)\s*/i);
+    if(variantMatch){ variant = variantMatch[1].toUpperCase(); dutch = dutch.replace(variantMatch[0],''); }
+    parsed.push({
+      dutch: dutch.trim(),
+      translation: (parts[1]||'').trim(),
+      example: (parts[2]||'').trim(),
+      category: (parts[3]||'Общее').trim() || 'Общее',
+      transcription: (parts[4]||'').trim(),
+      variant
+    });
+  }
+  return parsed;
+}
+
+function addWordsBulk(raw){
+  const items = parseBulkLines(raw);
+  if(items.length===0){ toast('Не нашёл ни одной строки для добавления.'); return; }
+  let added=0, skipped=0;
+  for(const it of items){
+    if(!it.translation){ skipped++; continue; }
+    const exists = state.vocab.some(w => w.dutch.toLowerCase() === it.dutch.toLowerCase());
+    if(exists){ skipped++; continue; }
+    state.vocab.push({
+      id: uid(),
+      dutch: it.dutch,
+      translation: it.translation,
+      example: it.example,
+      category: it.category,
+      transcription: it.transcription || '',
+      variant: it.variant,
+      dateAdded: todayISO(),
+      box: 1,
+      nextReview: todayISO(),
+      correctCount: 0,
+      incorrectCount: 0
+    });
+    added++;
+  }
+  saveVocab();
+  toast(`Добавлено: ${added}${skipped? ', пропущено (дубли/без перевода): '+skipped : ''}`);
+  render();
+}
+
+/* ===================== SPEECH (audio pronunciation) ===================== */
+function speak(text, lang){
+  if(!text) return;
+  try{
+    if(!('speechSynthesis' in window)){ toast('Озвучка не поддерживается в этом браузере.'); return; }
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang || 'nl-NL';
+    u.rate = 0.85;
+    window.speechSynthesis.speak(u);
+  }catch(e){
+    toast('Не получилось озвучить — попробуй ещё раз.');
+  }
+}
+function langFor(w){ return w && w.variant==='BE' ? 'nl-BE' : 'nl-NL'; }
+function speakWord(id){
+  const w = state.vocab.find(x=>x.id===id);
+  if(w) speak(w.dutch, langFor(w));
+}
+function speakExampleFor(id){
+  const w = state.vocab.find(x=>x.id===id);
+  if(w && w.example) speak(w.example, langFor(w));
+}
+function speakCurrentReviewWord(){
+  const w = state.review.queue[0];
+  if(w) speak(w.dutch, langFor(w));
+}
+function speakCurrentReviewExample(){
+  const w = state.review.queue[0];
+  if(w && w.example) speak(w.example, langFor(w));
+}
+
+/* ===================== RULES (grammar explanations) ===================== */
+// Expected line format: заголовок | правило | пример | уровень
+function parseRuleLines(raw){
+  const lines = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const parsed = [];
+  for(const line of lines){
+    let parts;
+    if(line.includes('|')) parts = line.split('|');
+    else if(line.includes('\t')) parts = line.split('\t');
+    else continue;
+    parts = parts.map(p=>p.trim());
+    if(!parts[0]) continue;
+    parsed.push({
+      title: parts[0],
+      rule: (parts[1]||'').trim(),
+      example: (parts[2]||'').trim(),
+      level: (parts[3]||'Общее').trim() || 'Общее'
+    });
+  }
+  return parsed;
+}
+
+function addRulesBulk(raw){
+  const items = parseRuleLines(raw);
+  if(items.length===0){ toast('Не нашёл ни одной строки для добавления.'); return; }
+  let added=0, skipped=0;
+  for(const it of items){
+    if(!it.rule){ skipped++; continue; }
+    const exists = state.rules.some(r => r.title.toLowerCase() === it.title.toLowerCase());
+    if(exists){ skipped++; continue; }
+    state.rules.push({
+      id: uid(),
+      title: it.title,
+      rule: it.rule,
+      example: it.example,
+      level: it.level,
+      dateAdded: todayISO()
+    });
+    added++;
+  }
+  saveRules();
+  toast(`Добавлено правил: ${added}${skipped? ', пропущено (дубли/без текста): '+skipped : ''}`);
+  render();
+}
+
+function deleteRule(id){
+  if(!confirm('Удалить это правило?')) return;
+  state.rules = state.rules.filter(r=>r.id!==id);
+  saveRules();
+  render();
+}
+
+function buildRulesMarkdown(){
+  const order = ['A1','A2','B1'];
+  const groups = {};
+  state.rules.forEach(r=>{
+    const lvl = order.includes(r.level) ? r.level : 'Другое';
+    if(!groups[lvl]) groups[lvl] = [];
+    groups[lvl].push(r);
+  });
+  const levels = [...order.filter(l=>groups[l]), ...Object.keys(groups).filter(l=>!order.includes(l))];
+  let lines = ['# Правила нидерландской грамматики', '', '_Собрано по ходу занятий с Claude — загрузи этот файл в Project Knowledge проекта, чтобы он был доступен автоматически в каждом чате._', ''];
+  if(levels.length===0){
+    lines.push('_Пока нет ни одного правила — добавляй их во вкладке «Правила»._');
+  }
+  levels.forEach(lvl=>{
+    lines.push(`## ${lvl}`, '');
+    groups[lvl].forEach(r=>{
+      lines.push(`**${r.title}**`);
+      lines.push(r.rule);
+      if(r.example) lines.push(`*Пример:* ${r.example}`);
+      lines.push('');
+    });
+  });
+  return lines.join('\n');
+}
+
+function openRulesExport(){ state.tab = '__rulesExport'; render(); }
+
+async function copyRulesExport(){
+  const text = buildRulesMarkdown();
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Скопировано — сохрани как .md и загрузи в Project Knowledge.');
+  }catch(e){
+    toast('Не получилось скопировать автоматически — выдели текст вручную.');
+  }
+}
+/* ===================== ACTIONS ===================== */
+function deleteWord(id){
+  if(!confirm('Удалить это слово из словаря?')) return;
+  state.vocab = state.vocab.filter(w=>w.id!==id);
+  saveVocab();
+  render();
+}
+
+function setTab(tab){ state.tab = tab; render(); flushSaves(); }
+
+function toggleGrammar(id){
+  const cur = state.grammar[id]?.status || 'not_started';
+  const next = cur==='not_started' ? 'in_progress' : cur==='in_progress' ? 'done' : 'not_started';
+  state.grammar[id] = {status: next};
+  saveGrammar();
+  render();
+}
+
+function startReview(){
+  startReviewByCategory('__all__');
+}
+
+function startReviewByCategory(key){
+  let pool = key==='__all__' ? state.vocab.slice() : state.vocab.filter(w=>categoryKeyOf(w.category)===key);
+  let due = pool.filter(isDue);
+  if(due.length===0) due = pool;
+  if(due.length===0){ toast(key==='__all__' ? 'Сначала добавь слова в словарь.' : 'В этой теме пока нет слов.'); return; }
+  due.sort(()=>Math.random()-0.5);
+  state.review = {queue: due, flipped:false, masteredCount:0, totalStarted: due.length, scopeKey: key};
+  render();
+}
+
+function flipCard(){
+  state.review.flipped = !state.review.flipped;
+  render();
+}
+
+function gradeCard(correct){
+  const r = state.review;
+  const w = r.queue.shift();
+  if(!w) return;
+  if(correct){ w.box = Math.min(5, w.box+1); w.correctCount++; }
+  else { w.box = 1; w.incorrectCount++; }
+  w.nextReview = addDays(todayISO(), BOX_INTERVAL[w.box]);
+  saveVocab();
+  if(w.box < 5){
+    r.queue.push(w);
+  } else {
+    r.masteredCount++;
+  }
+  r.flipped = false;
+  if(r.queue.length===0) flushSaves();
+  render();
+}
+
+/* ===================== WRITING PRACTICE (RU -> NL, mastered words only) ===================== */
+function startWrite(){
+  startWriteByCategory('__all__');
+}
+
+function startWriteByCategory(key){
+  let pool = state.vocab.filter(w => statusOf(w)==='mastered' && (key==='__all__' || categoryKeyOf(w.category)===key));
+  if(pool.length===0){ toast(key==='__all__' ? 'Пока нет ни одного выученного слова.' : 'В этой теме пока нет выученных слов.'); return; }
+  pool = pool.slice().sort(()=>Math.random()-0.5);
+  state.write = {queue: pool, idx:0, input:'', submitted:false, wasCorrect:null, correctCount:0, total: pool.length, scopeKey:key};
+  render();
+  focusWriteInput();
+}
+
+function updateWriteInput(val){
+  if(state.write) state.write.input = val;
+}
+
+function submitWrite(){
+  const s = state.write;
+  if(!s) return;
+  const w = s.queue[s.idx];
+  if(!w || s.submitted) return;
+  const norm = t => (t||'').trim().toLowerCase().replace(/\s+/g,' ');
+  const correct = norm(s.input) === norm(w.dutch);
+  s.submitted = true;
+  s.wasCorrect = correct;
+  if(correct){ s.correctCount++; state.writeStats.correct++; } else { state.writeStats.incorrect++; }
+  saveWriteStats();
+  render();
+}
+
+function nextWrite(){
+  const s = state.write;
+  if(!s) return;
+  s.idx++;
+  s.input = '';
+  s.submitted = false;
+  s.wasCorrect = null;
+  if(s.idx >= s.queue.length) flushSaves();
+  render();
+  focusWriteInput();
+}
+
+function writeKeydown(ev){
+  if(ev.key !== 'Enter') return;
+  if(state.write.submitted) nextWrite(); else submitWrite();
+}
+
+function focusWriteInput(){
+  setTimeout(()=>{ document.getElementById('writeInput')?.focus(); }, 0);
+}
+
+function confirmReset(){
+  if(!confirm('Точно стереть все слова и прогресс по грамматике? Это необратимо.')) return;
+  state.vocab = [];
+  state.grammar = {};
+  saveVocab(); saveGrammar();
+  render();
+  toast('Всё очищено.');
+}
+
+/* ===================== EXPORT ===================== */
+function buildExportText(){
+  const counts = {new:0, learning:0, review:0, mastered:0};
+  state.vocab.forEach(w=>counts[statusOf(w)]++);
+  let lines = [];
+  lines.push('=== Мой словарь нидерландского (экспорт из трекера) ===');
+  lines.push(`Всего слов: ${state.vocab.length} — Новое: ${counts.new}, Учу: ${counts.learning}, Повторяю: ${counts.review}, Выучено: ${counts.mastered}`);
+  lines.push('');
+  lines.push('Слова (нидерландский — перевод — статус):');
+  if(state.vocab.length===0) lines.push('(словарь пока пуст)');
+  state.vocab
+    .slice()
+    .sort((a,b)=> a.dutch.localeCompare(b.dutch))
+    .forEach(w=>{
+      lines.push(`${w.dutch}${w.variant? ' ('+w.variant+')':''} — ${w.translation} — ${STATUS_LABEL[statusOf(w)]}`);
+    });
+  lines.push('');
+  lines.push('Грамматика по уровням:');
+  ['A1','A2','B1'].forEach(lvl=>{
+    const topics = GRAMMAR_TOPICS.filter(t=>t.level===lvl);
+    const done = topics.filter(t=> state.grammar[t.id]?.status==='done').length;
+    const inprog = topics.filter(t=> state.grammar[t.id]?.status==='in_progress').length;
+    lines.push(`[${lvl}] пройдено ${done}/${topics.length}, в процессе: ${inprog}`);
+    topics.forEach(t=>{
+      const st = state.grammar[t.id]?.status || 'not_started';
+      const mark = st==='done' ? '✔' : st==='in_progress' ? '…' : '·';
+      lines.push(`  ${mark} ${t.text}`);
+    });
+  });
+  lines.push('');
+  lines.push('Сохранённые правила (полный текст — в Project Knowledge, если файл загружен):');
+  if(state.rules.length===0) lines.push('(правил пока нет)');
+  state.rules.slice().sort((a,b)=>a.level.localeCompare(b.level)).forEach(r=>{
+    lines.push(`[${r.level}] ${r.title}`);
+  });
+  return lines.join('\n');
+}
+
+function openExport(){
+  state.tab = '__export';
+  render();
+}
+
+function buildJsonBackup(){
+  return JSON.stringify({vocab: state.vocab, grammar: state.grammar, rules: state.rules, writeStats: state.writeStats}, null, 2);
+}
+
+function openImportBackup(){ state.tab = '__import'; render(); }
+
+function renderImportTab(){
+  return `
+    <div class="panel">
+      <h2>Импорт бэкапа</h2>
+      <p class="hint">Вставь сюда JSON, скопированный кнопкой «JSON-бэкап» из старого трекера (в чате Claude) или из более ранней версии этого приложения. Существующие слова и правила не дублируются — совпадающие по названию просто пропускаются.</p>
+      <textarea id="importBox" placeholder='{"vocab": [...], "grammar": {...}, "rules": [...]}' style="min-height:160px;"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn btn-primary" onclick="importJsonBackup(document.getElementById('importBox').value); document.getElementById('importBox').value='';">Импортировать</button>
+      <button class="btn" onclick="setTab('dashboard')">Закрыть</button>
+    </div>
+  `;
+}
+
+function openJsonBackup(){ state.tab = '__jsonBackup'; render(); }
+
+async function copyJsonBackup(){
+  const text = buildJsonBackup();
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Скопировано — сохрани как файл, если нужен перенос данных.');
+  }catch(e){
+    toast('Не получилось скопировать автоматически — выдели текст вручную.');
+  }
+}
+
+async function copyExport(){
+  const text = buildExportText();
+  try{
+    await navigator.clipboard.writeText(text);
+    toast('Скопировано в буфер обмена.');
+  }catch(e){
+    toast('Не получилось скопировать автоматически — выдели текст вручную и скопируй.');
+  }
+}
+
+/* ===================== RENDER ===================== */
+function render(){
+  renderTabs();
+  const el = document.getElementById('content');
+  if(state.loading){ el.innerHTML = '<div class="empty-state">Загружаю...</div>'; return; }
+  if(state.tab==='dashboard') el.innerHTML = renderDashboard();
+  else if(state.tab==='vocab') el.innerHTML = renderVocabTab();
+  else if(state.tab==='review') el.innerHTML = renderReviewTab();
+  else if(state.tab==='write') el.innerHTML = renderWriteTab();
+  else if(state.tab==='grammar') el.innerHTML = renderGrammarTab();
+  else if(state.tab==='rules') el.innerHTML = renderRulesTab();
+  else if(state.tab==='__export') el.innerHTML = renderExportTab();
+  else if(state.tab==='__rulesExport') el.innerHTML = renderRulesExportTab();
+  else if(state.tab==='__jsonBackup') el.innerHTML = renderJsonBackupTab();
+  else if(state.tab==='__import') el.innerHTML = renderImportTab();
+  wireDynamicInputs();
+}
+
+function renderTabs(){
+  const tabs = [
+    ['dashboard','Обзор'],
+    ['vocab','Словарь'],
+    ['review','Повторение'],
+    ['write','Письмо'],
+    ['grammar','Грамматика'],
+    ['rules','Правила'],
+  ];
+  document.getElementById('tabs').innerHTML = tabs.map(([id,label])=>
+    `<button class="tab-btn ${state.tab===id?'active':''}" onclick="setTab('${id}')">${label}</button>`
+  ).join('');
+}
+
+function renderDashboard(){
+  const counts = {new:0, learning:0, review:0, mastered:0};
+  state.vocab.forEach(w=>counts[statusOf(w)]++);
+  const due = state.vocab.filter(isDue).length;
+  const grammarDone = GRAMMAR_TOPICS.filter(t=>state.grammar[t.id]?.status==='done').length;
+
+  return `
+    <div class="grid-stats">
+      <div class="stat-card"><div class="num">${state.vocab.length}</div><div class="lbl">слов в словаре</div></div>
+      <div class="stat-card accent-due"><div class="num">${due}</div><div class="lbl">к повторению сегодня</div></div>
+      <div class="stat-card accent-mastered"><div class="num">${counts.mastered}</div><div class="lbl">выучено</div></div>
+      <div class="stat-card"><div class="num">${grammarDone}/${GRAMMAR_TOPICS.length}</div><div class="lbl">тем грамматики пройдено</div></div>
+      <div class="stat-card"><div class="num">${state.rules.length}</div><div class="lbl">правил сохранено</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Быстро добавить слова</h2>
+      <p class="hint">Вставь блок, который тебе прислал Claude в чате (формат: слово | перевод | пример | тема | транскрипция), и нажми «Добавить».</p>
+      <div class="field">
+        <textarea id="quickAdd" placeholder="huis | дом | Dit is mijn huis. | жильё | хёйс
+lekker | вкусно / классно | Dat eten is lekker! | общее | лэккер"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="addWordsBulk(document.getElementById('quickAdd').value); document.getElementById('quickAdd').value='';">Добавить в словарь</button>
+    </div>
+
+    ${due>0 ? `
+    <div class="panel">
+      <h2>Пора повторить</h2>
+      <p class="hint">${due} слов${due===1?'о':''} ждут повторения.</p>
+      <button class="btn btn-primary" onclick="setTab('review')">Начать повторение</button>
+    </div>` : ''}
+  `;
+}
+
+function renderVocabTab(){
+  const addPanel = `
+    <div class="panel">
+      <h2>Добавить слова</h2>
+      <p class="hint">Формат: слово | перевод | пример | тема | транскрипция (по одному на строку, транскрипция необязательна). Можно вставлять сразу блоками из чата.</p>
+      <textarea id="vocabAdd" placeholder="woord | перевод | пример | тема | транскрипция"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn btn-primary" onclick="addWordsBulk(document.getElementById('vocabAdd').value); document.getElementById('vocabAdd').value='';">Добавить</button>
+    </div>
+  `;
+
+  if(state.selectedCategory===null){
+    const groups = {};
+    state.vocab.forEach(w=>{
+      const key = categoryKeyOf(w.category);
+      if(!groups[key]) groups[key] = {label: categoryLabelOf(w.category), count:0};
+      groups[key].count++;
+    });
+    const keys = Object.keys(groups).sort((a,b)=> groups[a].label.localeCompare(groups[b].label));
+    const catCards = keys.map(key=>`
+      <div class="category-card" onclick="state.selectedCategory='${key}'; render();">
+        <div class="category-name">${escapeHtml(groups[key].label)}</div>
+        <div class="category-count">${groups[key].count} слов${pluralWordsSuffix(groups[key].count)}</div>
+      </div>
+    `).join('');
+
+    return `
+      ${addPanel}
+      ${state.vocab.length>0 ? `
+        <div class="category-grid">
+          <div class="category-card category-card-all" onclick="state.selectedCategory='__all__'; render();">
+            <div class="category-name">Все слова</div>
+            <div class="category-count">${state.vocab.length} слов${pluralWordsSuffix(state.vocab.length)}</div>
+          </div>
+          ${catCards}
+        </div>
+      ` : '<div class="empty-state">Ничего не найдено. Добавь первые слова выше — или попроси Claude прислать список после урока.</div>'}
+    `;
+  }
+
+  let list = state.vocab.slice().sort((a,b)=> b.dateAdded.localeCompare(a.dateAdded));
+  if(state.selectedCategory!=='__all__') list = list.filter(w=>categoryKeyOf(w.category)===state.selectedCategory);
+  if(state.filterStatus!=='all') list = list.filter(w=>statusOf(w)===state.filterStatus);
+  if(state.filterText) list = list.filter(w =>
+    w.dutch.toLowerCase().includes(state.filterText.toLowerCase()) ||
+    w.translation.toLowerCase().includes(state.filterText.toLowerCase())
+  );
+
+  let headingLabel = 'Все слова';
+  if(state.selectedCategory !== '__all__'){
+    const match = state.vocab.find(w=>categoryKeyOf(w.category)===state.selectedCategory);
+    headingLabel = match ? categoryLabelOf(match.category) : state.selectedCategory;
+  }
+
+  const chips = ['all','new','learning','review','mastered'].map(s=>{
+    const label = s==='all' ? 'Все' : STATUS_LABEL[s];
+    return `<button class="chip ${state.filterStatus===s?'active':''}" onclick="state.filterStatus='${s}'; render();">${label}</button>`;
+  }).join('');
+
+  const cards = list.map(w=>`
+    <div class="word-card status-${statusOf(w)}">
+      <div class="word-main">
+        <div class="word-head">
+          <span class="word-nl">${escapeHtml(w.dutch)}</span>
+          ${w.transcription? `<span class="word-transcription">[${escapeHtml(w.transcription)}]</span>`:''}
+          <button class="icon-btn speak-btn" title="Слушать слово" onclick="speakWord('${w.id}')">🔊</button>
+          ${w.variant? `<span class="word-variant ${w.variant}">${w.variant}</span>`:''}
+        </div>
+        <div class="word-tr">${escapeHtml(w.translation)}</div>
+        ${w.example? `<div class="word-ex">«${escapeHtml(w.example)}» <button class="icon-btn speak-btn" title="Слушать пример" onclick="speakExampleFor('${w.id}')">🔊</button></div>`:''}
+        <div class="word-meta">${escapeHtml(w.category||'Общее')} · ${STATUS_LABEL[statusOf(w)]}</div>
+      </div>
+      <div class="word-actions">
+        <button class="icon-btn" title="Удалить" onclick="deleteWord('${w.id}')">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    ${addPanel}
+    <div class="back-row">
+      <button class="btn btn-sm" onclick="state.selectedCategory=null; render();">← Все темы</button>
+    </div>
+    <h2 class="category-heading">${escapeHtml(headingLabel)}</h2>
+
+    <div class="toolbar">
+      <input type="text" id="searchVocab" placeholder="Поиск в этой теме..." value="${escapeHtml(state.filterText)}" oninput="state.filterText=this.value; render();">
+      ${chips}
+    </div>
+
+    <div class="word-list">
+      ${cards || '<div class="empty-state">В этой теме пока ничего не найдено по заданному фильтру.</div>'}
+    </div>
+  `;
+}
+
+function renderReviewTab(){
+  const r = state.review;
+  if(!r.queue || r.queue.length === 0){
+    const due = state.vocab.filter(isDue).length;
+
+    const groups = {};
+    state.vocab.forEach(w=>{
+      const key = categoryKeyOf(w.category);
+      if(!groups[key]) groups[key] = {label: categoryLabelOf(w.category), count:0};
+      groups[key].count++;
+    });
+    const keys = Object.keys(groups).sort((a,b)=> groups[a].label.localeCompare(groups[b].label));
+    const catChips = keys.map(key=>`
+      <button class="chip" onclick="startReviewByCategory('${key}')">${escapeHtml(groups[key].label)} (${groups[key].count})</button>
+    `).join('');
+
+    return `
+      <div class="panel" style="text-align:center;">
+        <h2>Повторение</h2>
+        ${r.masteredCount>0 ? `<p class="hint">Заход завершён — выучено слов: ${r.masteredCount} из ${r.totalStarted}. 🎉</p>` : `<p class="hint">${due>0? due+' слов ждут повторения.' : 'Сейчас нечего повторять — но можно потренироваться на всём словаре.'}</p>`}
+        <button class="btn btn-primary" onclick="startReview()">${due>0?'Начать повторение':'Повторить всё'}</button>
+      </div>
+      ${keys.length>0 ? `
+        <div class="panel">
+          <h2>Повторить по теме</h2>
+          <p class="hint">Отдельная сессия только по выбранной теме — доводит каждое слово темы до статуса «Выучено», прежде чем закончиться.</p>
+          <div class="toolbar">${catChips}</div>
+        </div>
+      ` : ''}
+    `;
+  }
+  const w = r.queue[0];
+  return `
+    <div class="review-stage">
+      <div class="review-progress">Осталось довести до «Выучено»: ${r.queue.length} · уже выучено в этом заходе: ${r.masteredCount} из ${r.totalStarted}${r.scopeKey && r.scopeKey!=='__all__' ? ' · тема: ' + escapeHtml(categoryLabelOf(w.category)) : ''}</div>
+      <div class="flip-card ${r.flipped?'flipped':''}" onclick="flipCard()">
+        <div class="flip-inner">
+          <div class="flip-face front">
+            <div class="flip-front-word">${escapeHtml(w.dutch)}</div>
+            ${w.transcription? `<div class="flip-front-hint" style="margin-top:2px;">[${escapeHtml(w.transcription)}]</div>`:''}
+            <button class="btn btn-sm" style="margin-top:12px;" onclick="event.stopPropagation(); speakCurrentReviewWord();">🔊 Слушать</button>
+            <div class="flip-front-hint" style="margin-top:10px;">нажми на карточку, чтобы увидеть перевод</div>
+          </div>
+          <div class="flip-face back">
+            <div class="flip-back-word">${escapeHtml(w.translation)}</div>
+            ${w.example? `<div class="flip-back-ex">«${escapeHtml(w.example)}»</div>`:''}
+            <button class="btn btn-sm" style="margin-top:12px;" onclick="event.stopPropagation(); speakCurrentReviewExample();">🔊 Пример</button>
+          </div>
+        </div>
+      </div>
+      ${r.flipped ? `
+        <div class="review-actions">
+          <button class="btn btn-forgot" onclick="gradeCard(false)">Не помню</button>
+          <button class="btn btn-know" onclick="gradeCard(true)">Помню</button>
+        </div>
+      ` : `<p class="hint" style="margin:0;">Сначала вспомни перевод, потом переверни карточку</p>`}
+    </div>
+  `;
+}
+
+function renderWriteTab(){
+  const s = state.write;
+  const masteredAll = state.vocab.filter(w=>statusOf(w)==='mastered');
+
+  if(!s || s.idx >= s.queue.length){
+    const groups = {};
+    masteredAll.forEach(w=>{
+      const key = categoryKeyOf(w.category);
+      if(!groups[key]) groups[key] = {label: categoryLabelOf(w.category), count:0};
+      groups[key].count++;
+    });
+    const keys = Object.keys(groups).sort((a,b)=> groups[a].label.localeCompare(groups[b].label));
+    const catChips = keys.map(key=>`
+      <button class="chip" onclick="startWriteByCategory('${key}')">${escapeHtml(groups[key].label)} (${groups[key].count})</button>
+    `).join('');
+
+    return `
+      <div class="panel" style="text-align:center;">
+        <h2>Письмо (RU → NL)</h2>
+        <p class="hint">Показывается русский перевод — печатаешь слово на нидерландском. Работает только с уже выученными словами, на общий прогресс словаря не влияет.</p>
+        ${s && s.total>0 ? `<p class="hint">Прошлый заход: верно ${s.correctCount} из ${s.total}.</p>` : ''}
+        ${masteredAll.length===0
+          ? `<p class="hint">Пока нет ни одного слова со статусом «Выучено» — сначала пройди повторение.</p>`
+          : `<button class="btn btn-primary" onclick="startWrite()">Начать (все выученные — ${masteredAll.length})</button>`}
+      </div>
+      ${keys.length>0 ? `
+        <div class="panel">
+          <h2>Тренировать по теме</h2>
+          <div class="toolbar">${catChips}</div>
+        </div>
+      ` : ''}
+      <div class="panel">
+        <h2>Статистика письма</h2>
+        <p class="hint" style="margin:0;">Верно: ${state.writeStats.correct} · Неверно: ${state.writeStats.incorrect}</p>
+      </div>
+    `;
+  }
+
+  const w = s.queue[s.idx];
+  return `
+    <div class="review-stage">
+      <div class="review-progress">Слово ${s.idx+1} из ${s.total} · верно в этом заходе: ${s.correctCount}${s.scopeKey && s.scopeKey!=='__all__' ? ' · тема: ' + escapeHtml(categoryLabelOf(w.category)) : ''}</div>
+      <div class="write-card">
+        <div class="write-prompt-label">Переведи на нидерландский:</div>
+        <div class="write-prompt-word">${escapeHtml(w.translation)}</div>
+      </div>
+      <input id="writeInput" type="text" class="write-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        value="${escapeHtml(s.input)}" ${s.submitted?'disabled':''}
+        oninput="updateWriteInput(this.value)" onkeydown="writeKeydown(event)">
+      ${!s.submitted ? `
+        <button class="btn btn-primary" onclick="submitWrite()">Проверить</button>
+      ` : `
+        <div class="write-feedback ${s.wasCorrect?'correct':'incorrect'}">
+          ${s.wasCorrect ? '✓ Верно!' : '✕ Неверно — правильно: ' + escapeHtml(w.dutch)}
+        </div>
+        <div class="word-tr">${escapeHtml(w.translation)}</div>
+        ${w.example? `<div class="word-ex">«${escapeHtml(w.example)}»</div>`:''}
+        <button class="btn btn-primary" onclick="nextWrite()">Далее →</button>
+      `}
+    </div>
+  `;
+}
+
+function renderGrammarTab(){
+  const blocks = ['A1','A2','B1'].map(lvl=>{
+    const topics = GRAMMAR_TOPICS.filter(t=>t.level===lvl);
+    const done = topics.filter(t=>state.grammar[t.id]?.status==='done').length;
+    const pct = Math.round(done/topics.length*100);
+    const rows = topics.map(t=>{
+      const st = state.grammar[t.id]?.status || 'not_started';
+      const mark = st==='done' ? '✔' : st==='in_progress' ? '…' : '';
+      return `
+        <div class="topic-row">
+          <button class="topic-status-btn ${st}" onclick="toggleGrammar('${t.id}')">${mark}</button>
+          <div class="topic-text ${st==='done'?'done':''}">${escapeHtml(t.text)}</div>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="level-block">
+        <div class="level-head">
+          <span class="level-tag">${lvl}</span>
+          <div class="level-bar"><div class="level-bar-fill" style="width:${pct}%"></div></div>
+          <span class="level-pct">${done}/${topics.length}</span>
+        </div>
+        ${rows}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="panel">
+      <h2>Чек-лист грамматики</h2>
+      <p class="hint">Отмечай темы по мере прохождения — клик переключает: не начато → в процессе → пройдено. Так ничего не потеряется между уроками.</p>
+      ${blocks}
+    </div>
+  `;
+}
+
+function renderRulesTab(){
+  let list = state.rules.slice().sort((a,b)=> b.dateAdded.localeCompare(a.dateAdded));
+  if(state.rulesFilterLevel!=='all') list = list.filter(r=>r.level===state.rulesFilterLevel);
+
+  const levelsPresent = ['A1','A2','B1','Общее'].filter(lvl => state.rules.some(r=>r.level===lvl));
+  const chips = ['all', ...levelsPresent].map(lvl=>{
+    const label = lvl==='all' ? 'Все' : lvl;
+    return `<button class="chip ${state.rulesFilterLevel===lvl?'active':''}" onclick="state.rulesFilterLevel='${lvl}'; render();">${label}</button>`;
+  }).join('');
+
+  const cards = list.map(r=>`
+    <div class="rule-card">
+      <div class="rule-head">
+        <span class="rule-title">${escapeHtml(r.title)}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="rule-level">${escapeHtml(r.level)}</span>
+          <button class="icon-btn" title="Удалить" onclick="deleteRule('${r.id}')">✕</button>
+        </div>
+      </div>
+      <div class="rule-text">${escapeHtml(r.rule)}</div>
+      ${r.example? `<div class="rule-example">${escapeHtml(r.example)}</div>`:''}
+    </div>
+  `).join('');
+
+  return `
+    <div class="panel">
+      <h2>Добавить правило</h2>
+      <p class="hint">Формат: заголовок | объяснение | пример | уровень (A1/A2/B1). Вставляй блок, который присылает Claude после урока.</p>
+      <textarea id="ruleAdd" placeholder="Порядок слов V2 | Глагол всегда стоит вторым членом предложения, даже если первым идёт не подлежащее | Vandaag ga ik naar huis. | A1"></textarea>
+      <div style="height:10px"></div>
+      <button class="btn btn-primary" onclick="addRulesBulk(document.getElementById('ruleAdd').value); document.getElementById('ruleAdd').value='';">Добавить</button>
+    </div>
+
+    <div class="panel">
+      <h2>Для Project Knowledge</h2>
+      <p class="hint">Чтобы Claude видел правила автоматически в каждом чате проекта (без вставки вручную) — выгрузи их как Markdown-файл и загрузи в базу знаний проекта.</p>
+      <button class="btn" onclick="openRulesExport()">Собрать Markdown-файл</button>
+    </div>
+
+    <div class="toolbar">${chips}</div>
+    <div class="word-list">
+      ${cards || '<div class="empty-state">Правил пока нет — они появятся здесь после того, как Claude разберёт первую грамматическую тему.</div>'}
+    </div>
+  `;
+}
+
+function renderRulesExportTab(){
+  const text = buildRulesMarkdown();
+  return `
+    <div class="panel">
+      <h2>Markdown для Project Knowledge</h2>
+      <p class="hint">Скопируй текст, сохрани как файл (например, pravila-nl.md) и загрузи в базу знаний проекта. При обновлении просто замени файл на новую версию.</p>
+      <div class="export-box">
+        <textarea readonly onclick="this.select()">${escapeHtml(text)}</textarea>
+        <div style="height:10px"></div>
+        <button class="btn btn-primary" onclick="copyRulesExport()">Скопировать</button>
+        <button class="btn" onclick="setTab('rules')">Закрыть</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderJsonBackupTab(){
+  const text = buildJsonBackup();
+  return `
+    <div class="panel">
+      <h2>Полный JSON-бэкап</h2>
+      <p class="hint">Технический формат для переноса всех данных (слова, грамматика, правила) в другую копию трекера — например, в PWA-версию для телефона. Скопируй текст и сохрани как файл, либо сразу вставь в поле импорта на новом месте.</p>
+      <div class="export-box">
+        <textarea readonly onclick="this.select()">${escapeHtml(text)}</textarea>
+        <div style="height:10px"></div>
+        <button class="btn btn-primary" onclick="copyJsonBackup()">Скопировать</button>
+        <button class="btn" onclick="setTab('dashboard')">Закрыть</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderExportTab(){
+  const text = buildExportText();
+  return `
+    <div class="panel">
+      <h2>Экспорт для Claude</h2>
+      <p class="hint">Скопируй этот блок и вставь в начале нового урока — Claude увидит, что ты уже знаешь, и не будет повторять пройденное.</p>
+      <div class="export-box">
+        <textarea readonly onclick="this.select()">${escapeHtml(text)}</textarea>
+        <div style="height:10px"></div>
+        <button class="btn btn-primary" onclick="copyExport()">Скопировать</button>
+        <button class="btn" onclick="setTab('dashboard')">Закрыть</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireDynamicInputs(){ /* placeholder for future direct listeners if needed */ }
+
+/* ===================== INIT ===================== */
+(async function init(){
+  await loadAll();
+  render();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
